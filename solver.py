@@ -20,6 +20,7 @@ def reverse_subtract(total, n, solution):
   
 operations = [add, multiply, subtract, divide, reverse_divide, reverse_subtract]
 target = 24
+threshold = .00000000001 # For equality testing allowing floating point error.
 
 solutions = []
 
@@ -29,7 +30,10 @@ def operate(remainingNumbers, total, solution):
   
   if len(remainingNumbers) == 0:
     # We've used all the numbers
-    if (total == target) and (solution not in solutions):
+    if (total - target < threshold) and \
+	    (target - total < threshold) and \
+		 (solution not in solutions):
+		# total == target and solution is not already found.
       solutions.append(solution)
     return
   
