@@ -1,55 +1,73 @@
 #! /usr/bin/env python3
 
-def add(total, n, solution):
-  return total + n, "(" + solution + " + " + str(n) + ")"
-  
-def multiply(total, n, solution):
-  return total * n, solution + " * " + str(n)
-  
-def subtract(total, n, solution):
-  return total - n, "(" + solution + " - " + str(n) + ")"
-  
-def divide(total, n, solution):
-  return total / n, solution + " / " + str(n)
-  
-def reverse_divide(total, n, solution):
-  return n / total, str(n) + " / " + solution
-  
-def reverse_subtract(total, n, solution):
-  return n - total, "(" + str(n) + " - " + solution + ")"
-  
-operations = [add, multiply, subtract, divide, reverse_divide, reverse_subtract]
 target = 24
-threshold = .00000000001 # For equality testing allowing floating point error.
-
+threshold = .0000001
 solutions = []
 
-def operate(remainingNumbers, total, solution):
+class chunk(object):
+  def __init__(self, number, text = None):
+    self.total = number
+    if text is None:
+      self.text = str(number)
+    else:
+      self.text = text
+
+
+def add(a, b):
+  newTotal = a.total + b.total
+  newText = "(" + a.text + " + " + b.text + ")"
+  return chunk(newTotal, newText)
+  
+def multiply(a, b):
+  newTotal = a.total * b.total
+  newText = "(" + a.text + " * " + b.text + ")"
+  return chunk(newTotal, newText)
+
+def subtract(a, b):
+  newTotal = a.total - b.total
+  newText = "(" + a.text + " - " + b.text + ")"
+  return chunk(newTotal, newText)
+  
+def divide(a, b):
+  newTotal = a.total / b.total
+  newText = "(" + a.text + " / " + b.text + ")"
+  return chunk(newTotal, newText)   
+    
+operations = [add, multiply, subtract, divide]
+
+
+
+def operate(chunks):
 
   # Some divisions will not return integers, but let's assume that's okay.
   
-  if len(remainingNumbers) == 0:
-    # We've used all the numbers
-    if (total - target < threshold) and \
-	    (target - total < threshold) and \
-		 (solution not in solutions):
-		# total == target and solution is not already found.
-      solutions.append(solution)
+  if len(chunks) == 1:
+    # All compressed down to one chunk
+    if (chunks[0].total - target < threshold) and \
+       (target - chunks[0].total < threshold) and \
+       (chunks[0] not in solutions):
+       
+      solutions.append(chunks[0])
     return
   
   else:
-  # Some numbers still remain
-    for n in remainingNumbers:
-      reducedNumbers = remainingNumbers.copy()
-      reducedNumbers.remove(n)
-    
-      for operation in operations:
-        try:
-          newTotal, newSolution = operation(total, n, solution)
-        except ZeroDivisionError:
-          pass # Nothing specific to do; just don't make the recursive call.
-        else:
-          operate(reducedNumbers, newTotal, newSolution)
+  # Some chunks still remain
+    for chunk1 in chunks:
+      chunksM1 = chunks.copy()
+      chunksM1.remove(chunk1)
+      for chunk2 in chunksM1:
+        chunksM2 = chunksM1.copy()
+        chunksM2.remove(chunk2)
+        for operation in operations:
+          #import ipdb; ipdb.set_trace()
+          try:
+            newChunk = operation(chunk1, chunk2)
+          except ZeroDivisionError:
+            pass # Nothing specific to do; just don't make the recursive call.
+          else:
+            newChunks = chunksM2.copy()
+            newChunks.append(newChunk)
+            operate(newChunks)
         
 
 def number_input(prompt):
@@ -64,20 +82,11 @@ if __name__ == "__main__":
 
   numbers = []
   for n in range(4):
-    numbers.append(number_input("Enter a puzzle number: "))
-  
-  # The rules of the game do not allow starting at 0 so I can not use
-  # 0 x 2 x 5 + (3 x 8) = 24
-  # ie. I cannot start with operate (numbers, 0)
-  # Therefore, we must call the operate function with the total preset
-  # to each of the original numbers
-  for n in numbers:
-    reducedNumbers = numbers.copy()
-    reducedNumbers.remove(n)
-    operate(reducedNumbers, n, str(n))
+    numbers.append(chunk(number_input("Enter a puzzle number: ")))  
+  operate(numbers)
     
   if len(solutions) == 0:
     print("No solutions found.")
   else:
     for solution in solutions:
-      print(solution)
+      print(solution.text)
