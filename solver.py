@@ -59,7 +59,6 @@ def operate(chunks):
         chunksM2 = chunksM1.copy()
         chunksM2.remove(chunk2)
         for operation in operations:
-          #import ipdb; ipdb.set_trace()
           try:
             newChunk = operation(chunk1, chunk2)
           except ZeroDivisionError:
